@@ -1,0 +1,39 @@
+box: golang:latest
+
+build:
+  steps:
+    - script:
+      name: setup environment
+      code: |-
+        export GOPATH=/
+        mkdir -p /src/github.com/mh-cbon/
+        cp -a $WERCKER_SOURCE_DIR /src/github.com/mh-cbon/go-bin-deb
+        export WERCKER_SOURCE_DIR=/src/github.com/mh-cbon/go-bin-deb
+        #cd $WERCKER_SOURCE_DIR && glide install && go install
+        cd $WERCKER_SOURCE_DIR && go get .
+
+    - script:
+      name: build
+      code: |-
+        mkdir -p build
+        export CGO_ENABLED=0
+        export GOLDFLAGS='-w -s'
+        export GOARCH=amd64 && go build -ldflags "$GOLDFLAGS" -o build/${GOARCH}/go-bin-deb
+        export GOARCH=arm64 && go build -ldflags "$GOLDFLAGS" -o build/${GOARCH}/go-bin-deb
+
+deploy:
+  steps:
+    - github-create-release:
+      token: $GITHUB_TOKEN
+      tag: $GITHUB_RELEASE_VERSION
+      title: $GITHUB_RELEASE_VERSION
+    - github-upload-asset:
+      token: $GITHUB_TOKEN
+      content-type: binary/octet-stream
+      file: build/amd64/go-bin-deb
+      filename: amd64/go-bin-deb
+    - github-upload-asset:
+      token: $GITHUB_TOKEN
+      content-type: binary/octet-stream
+      file: build/arm64/go-bin-deb
+      filename: arm64/go-bin-deb
