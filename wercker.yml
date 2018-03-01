@@ -11,14 +11,19 @@ build:
         export WERCKER_SOURCE_DIR=/src/github.com/mh-cbon/go-bin-deb
         #cd $WERCKER_SOURCE_DIR && glide install && go install
         cd $WERCKER_SOURCE_DIR && go get .
+        apt-get update && apt-get install -y --no-install-recommends fakeroot
 
     - script:
       name: build
       code: |-
         export CGO_ENABLED=0
-        export GOLDFLAGS='-w -s'
+        export GOLDFLAGS="-w -s -X main.VERSION=${GITHUB_RELEASE_VERSION}"
         export GOARCH=amd64 && go build -ldflags "$GOLDFLAGS" -o $WERCKER_ROOT/build/$GOARCH/go-bin-deb
         export GOARCH=arm64 && go build -ldflags "$GOLDFLAGS" -o $WERCKER_ROOT/build/$GOARCH/go-bin-deb
+
+        cd $WERCKER_ROOT
+        build/amd64/go-bin-deb generate --version $GITHUB_RELEASE_VERSION --arch amd64 && rm -rf pkg-build
+        build/amd64/go-bin-deb generate --version $GITHUB_RELEASE_VERSION --arch arm64 && rm -rf pkg-build
 
 deploy:
   steps:
@@ -37,3 +42,13 @@ deploy:
       content-type: binary/octet-stream
       file: build/arm64/go-bin-deb
       filename: arm64/go-bin-deb
+    - github-upload-asset:
+      token: $GITHUB_TOKEN
+      content-type: application/vnd.debian.binary-package
+      file: go-bin-deb_${GITHUB_RELEASE_VERSION}_amd64.deb
+      filename: go-bin-deb_${GITHUB_RELEASE_VERSION}_amd64.deb
+    - github-upload-asset:
+      token: $GITHUB_TOKEN
+      content-type: application/vnd.debian.binary-package
+      file: go-bin-deb_${GITHUB_RELEASE_VERSION}_arm64.deb
+      filename: go-bin-deb_${GITHUB_RELEASE_VERSION}_arm64.deb
