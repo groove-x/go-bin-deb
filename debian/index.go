@@ -980,7 +980,11 @@ func cp(dst, src string) error {
 		return err
 	}
 	defer s.Close()
-	d, err := os.Create(dst)
+	stat, err := s.Stat()
+	if err != nil {
+		return err
+	}
+	d, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, stat.Mode())
 	if err != nil {
 		return err
 	}
