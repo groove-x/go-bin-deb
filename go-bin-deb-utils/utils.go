@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mh-cbon/go-bin-deb/stringexec"
+	"github.com/groove-x/go-bin-deb/stringexec"
 )
 
 func maybesudo(w string, params ...interface{}) error {
