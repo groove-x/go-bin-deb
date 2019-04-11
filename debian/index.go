@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/groove-x/go-bin-deb/stringexec"
 	"github.com/mattn/go-zglob"
-	"github.com/mh-cbon/go-bin-deb/stringexec"
 	"github.com/mh-cbon/verbose"
 )
 
