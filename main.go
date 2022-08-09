@@ -7,9 +7,10 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/groove-x/go-bin-deb/debian"
 	"github.com/mh-cbon/verbose"
 	"github.com/urfave/cli"
+
+	"github.com/groove-x/go-bin-deb/debian"
 )
 
 // VERSION is the last build number.
@@ -109,8 +110,8 @@ func generateContents(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	logger.Printf("linting package in %s to %s", wd, output)
-	lintPackage(pkgDir, output) // it does not need to fail.
+	logger.Printf("linting package in %s to %s", output, debJSON.Name)
+	lintPackage(output, debJSON.Name, debJSON.Version, debJSON.Arch) // it does not need to fail.
 
 	return nil
 }
@@ -137,8 +138,8 @@ func buildPackage(wd string, output string) error {
 	return oCmd.Run()
 }
 
-func lintPackage(wd string, output string) error {
-	oCmd := exec.Command("lintian", output)
+func lintPackage(wd string, name, version, arch string) error {
+	oCmd := exec.Command("lintian", fmt.Sprintf("%s_%s_%s.deb", name, version, arch))
 	oCmd.Dir = wd
 	oCmd.Stdout = os.Stdout
 	oCmd.Stderr = os.Stderr
