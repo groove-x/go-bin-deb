@@ -54,6 +54,11 @@ func main() {
 					Value: "",
 					Usage: "Arch of the package",
 				},
+				cli.StringFlag{
+					Name:  "compression, z",
+					Value: "",
+					Usage: "Compression to use (via dpkg-deb -Z)",
+				},
 			},
 		},
 		{
@@ -79,6 +84,7 @@ func generateContents(c *cli.Context) error {
 	file := c.String("file")
 	version := c.String("version")
 	arch := c.String("arch")
+	compression := c.String("compression")
 
 	pkgDir := filepath.Join(wd)
 
@@ -110,8 +116,14 @@ func generateContents(c *cli.Context) error {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
-	logger.Printf("Building package in %s to %s", wd, output)
-	if err := buildPackage(pkgDir, output); err != nil {
+	extraArgs := []string{}
+	if compression != "" {
+		extraArgs = append(extraArgs, "-Z"+compression)
+		logger.Printf("Building package in %s to %s with compression %v", wd, output, compression)
+	} else {
+		logger.Printf("Building package in %s to %s", wd, output)
+	}
+	if err := buildPackage(pkgDir, output, extraArgs); err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
@@ -140,8 +152,13 @@ func testPkg(c *cli.Context) error {
 	return nil
 }
 
-func buildPackage(wd string, output string) error {
-	oCmd := exec.Command("fakeroot", "dpkg-deb", "--build", "debian", output)
+func buildPackage(wd string, output string, extraArgs []string) error {
+	args := []string{"dpkg-deb"}
+	if len(extraArgs) > 0 {
+		args = append(args, extraArgs...)
+	}
+	args = append(args, "--build", "debian", output)
+	oCmd := exec.Command("fakeroot", args...)
 	oCmd.Dir = wd
 	oCmd.Stdout = os.Stdout
 	oCmd.Stderr = os.Stderr
