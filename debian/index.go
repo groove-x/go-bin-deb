@@ -551,9 +551,9 @@ func (d *Package) ComputeSize(sourceDir string) (int64, error) {
 		//   return nil
 		// }
 		if err == nil {
-			s, _ := os.Stat(path)
+			s, err := os.Lstat(path)
 			if err == nil {
-				if s.IsDir() == false {
+				if !s.IsDir() {
 					size += s.Size()
 				}
 			}
