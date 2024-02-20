@@ -493,7 +493,7 @@ func (d *Package) ImportFiles(sourceDir string) error {
 		}
 		logger.Printf("targetItems=%q\n", targetItems)
 		for i, item := range items {
-			s, err := os.Stat(item)
+			s, err := os.Lstat(item)
 			if err != nil {
 				m := fmt.Sprintf("Could not stat source file '%s': %s", item, err.Error())
 				return errors.New(m)
@@ -512,7 +512,7 @@ func (d *Package) ImportFiles(sourceDir string) error {
 			}
 		}
 		for i, item := range items {
-			s, err := os.Stat(item)
+			s, err := os.Lstat(item)
 			if err != nil {
 				m := fmt.Sprintf("Could not stat source file '%s': %s", item, err.Error())
 				return errors.New(m)
@@ -543,7 +543,7 @@ func (d *Package) ComputeSize(sourceDir string) (int64, error) {
 		//   return nil
 		// }
 		if err == nil {
-			s, _ := os.Stat(path)
+			s, err := os.Lstat(path)
 			if err == nil {
 				if s.IsDir() == false {
 					size += s.Size()
@@ -598,7 +598,7 @@ func (d *Package) WriteControlFile(debianDir string, size uint64) error {
 	P += strAppend("Provides", d.Provides)
 	P += strAppend("Replaces", d.Replaces)
 	P += strAppend("Built-Using", d.BuiltUsing)
-	P += strAppend("Installed-Size", strconv.FormatUint(size,10))
+	P += strAppend("Installed-Size", strconv.FormatUint(size, 10))
 	P += strAppend("Package-Type", d.PackageType)
 
 	controlContent := []byte(P)
@@ -975,24 +975,38 @@ func strSliceAppend(name string, value []string, j string) string {
 	return ret
 }
 func cp(dst, src string) error {
-	s, err := os.Open(src)
+	stat, err := os.Lstat(src)
 	if err != nil {
 		return err
 	}
-	defer s.Close()
-	stat, err := s.Stat()
-	if err != nil {
-		return err
+
+	// シンボリックリンクの場合はリンク自体をコピーする
+	if stat.Mode()&os.ModeSymlink == os.ModeSymlink {
+		orig, err := os.Readlink(src)
+		if err != nil {
+			return err
+		}
+		return os.Symlink(orig, dst)
+	} else {
+		s, err := os.Open(src)
+		if err != nil {
+			return err
+		}
+		defer s.Close()
+		stat, err := s.Stat()
+		if err != nil {
+			return err
+		}
+		d, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, stat.Mode())
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(d, s); err != nil {
+			d.Close()
+			return err
+		}
+		return d.Close()
 	}
-	d, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, stat.Mode())
-	if err != nil {
-		return err
-	}
-	if _, err := io.Copy(d, s); err != nil {
-		d.Close()
-		return err
-	}
-	return d.Close()
 }
 
 func contains(s []string, v string) bool {
