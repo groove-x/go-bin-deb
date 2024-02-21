@@ -493,7 +493,7 @@ func (d *Package) ImportFiles(sourceDir string) error {
 		}
 		logger.Printf("targetItems=%q\n", targetItems)
 		for i, item := range items {
-			s, err := os.Stat(item)
+			s, err := os.Lstat(item)
 			if err != nil {
 				m := fmt.Sprintf("Could not stat source file '%s': %s", item, err.Error())
 				return errors.New(m)
@@ -512,12 +512,12 @@ func (d *Package) ImportFiles(sourceDir string) error {
 			}
 		}
 		for i, item := range items {
-			s, err := os.Stat(item)
+			s, err := os.Lstat(item)
 			if err != nil {
 				m := fmt.Sprintf("Could not stat source file '%s': %s", item, err.Error())
 				return errors.New(m)
 			}
-			if s.IsDir() == false {
+			if !s.IsDir() {
 				if symlink, err := isSymlink(item); err == nil && symlink {
 					err := cpSymlink(targetItems[i], item)
 					if err != nil {
