@@ -493,7 +493,7 @@ func (d *Package) ImportFiles(sourceDir string) error {
 		}
 		logger.Printf("targetItems=%q\n", targetItems)
 		for i, item := range items {
-			s, err := os.Stat(item)
+			s, err := os.Lstat(item)
 			if err != nil {
 				m := fmt.Sprintf("Could not stat source file '%s': %s", item, err.Error())
 				return errors.New(m)
@@ -512,19 +512,27 @@ func (d *Package) ImportFiles(sourceDir string) error {
 			}
 		}
 		for i, item := range items {
-			s, err := os.Stat(item)
+			s, err := os.Lstat(item)
 			if err != nil {
 				m := fmt.Sprintf("Could not stat source file '%s': %s", item, err.Error())
 				return errors.New(m)
 			}
-			if s.IsDir() == false {
-				if err := cp(targetItems[i], item); err != nil {
-					m := fmt.Sprintf("Could not copy file from '%s' to '%s': %s", item, targetItems[i], err.Error())
-					return errors.New(m)
-				}
-				if fileInst.Fperm != "" {
-					if err := os.Chmod(targetItems[i], os.FileMode(fperm)); err != nil {
-						return err
+			if !s.IsDir() {
+				if symlink, err := isSymlink(item); err == nil && symlink {
+					err := cpSymlink(targetItems[i], item)
+					if err != nil {
+						m := fmt.Sprintf("Could not copy symlink from '%s' to '%s': %s", item, targetItems[i], err.Error())
+						return errors.New(m)
+					}
+				} else {
+					if err := cp(targetItems[i], item); err != nil {
+						m := fmt.Sprintf("Could not copy file from '%s' to '%s': %s", item, targetItems[i], err.Error())
+						return errors.New(m)
+					}
+					if fileInst.Fperm != "" {
+						if err := os.Chmod(targetItems[i], os.FileMode(fperm)); err != nil {
+							return err
+						}
 					}
 				}
 			}
@@ -543,9 +551,9 @@ func (d *Package) ComputeSize(sourceDir string) (int64, error) {
 		//   return nil
 		// }
 		if err == nil {
-			s, _ := os.Stat(path)
+			s, err := os.Lstat(path)
 			if err == nil {
-				if s.IsDir() == false {
+				if !s.IsDir() {
 					size += s.Size()
 				}
 			}
@@ -598,7 +606,7 @@ func (d *Package) WriteControlFile(debianDir string, size uint64) error {
 	P += strAppend("Provides", d.Provides)
 	P += strAppend("Replaces", d.Replaces)
 	P += strAppend("Built-Using", d.BuiltUsing)
-	P += strAppend("Installed-Size", strconv.FormatUint(size,10))
+	P += strAppend("Installed-Size", strconv.FormatUint(size, 10))
 	P += strAppend("Package-Type", d.PackageType)
 
 	controlContent := []byte(P)
@@ -993,6 +1001,34 @@ func cp(dst, src string) error {
 		return err
 	}
 	return d.Close()
+}
+
+func cpSymlink(dst, src string) error {
+	link, err := os.Readlink(src)
+	if err != nil {
+		return err
+	}
+
+	// remove file if exists
+	if _, err := os.Lstat(dst); err == nil {
+		err := os.Remove(dst)
+		if err != nil {
+			return err
+		}
+	}
+	return os.Symlink(link, dst)
+}
+
+func isSymlink(s string) (bool, error) {
+	info, err := os.Lstat(s)
+	if err != nil {
+		return false, err
+	}
+
+	if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+		return true, nil
+	}
+	return false, nil
 }
 
 func contains(s []string, v string) bool {
