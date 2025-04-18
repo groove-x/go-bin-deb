@@ -7,9 +7,10 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/groove-x/go-bin-deb/debian"
 	"github.com/mh-cbon/verbose"
 	"github.com/urfave/cli"
+
+	"github.com/groove-x/go-bin-deb/debian"
 )
 
 // VERSION is the last build number.
@@ -87,6 +88,11 @@ func generateContents(c *cli.Context) error {
 		output = o
 	}
 
+	// Check if the file has a supported extension
+	if ext := filepath.Ext(file); ext != ".json" && ext != ".yaml" && ext != ".yml" {
+		return cli.NewExitError(fmt.Sprintf("unsupported file format: %s. only .json, .yaml, and .yml are supported.", ext), 1)
+	}
+
 	debJSON := debian.Package{}
 
 	// load the deb.json file
@@ -117,6 +123,11 @@ func generateContents(c *cli.Context) error {
 
 func testPkg(c *cli.Context) error {
 	file := c.String("file")
+
+	// Check if the file has a supported extension
+	if ext := filepath.Ext(file); ext != ".json" && ext != ".yaml" && ext != ".yml" {
+		return cli.NewExitError(fmt.Sprintf("unsupported file format: %s. only .json, .yaml, and .yml are supported.", ext), 1)
+	}
 
 	debJSON := debian.Package{}
 
