@@ -60,7 +60,7 @@ type menu struct {
 	MimeType        string `json:"mime-type"`      // ; separated list
 }
 
-// Package contaisn informtation about a debian package to build
+// Package contains information about a debian package to build
 type Package struct {
 	Name                string             `json:"name"`                 // Name of the package
 	Maintainer          string             `json:"maintainer"`           // Information of the package maintainer

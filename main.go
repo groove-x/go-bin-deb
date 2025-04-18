@@ -42,7 +42,7 @@ func main() {
 				cli.StringFlag{
 					Name:  "file, f",
 					Value: "deb.json",
-					Usage: "Path to the deb.json file",
+					Usage: "Path to the deb.json,deb.yml,deb.yaml file",
 				},
 				cli.StringFlag{
 					Name:  "version",
@@ -64,7 +64,7 @@ func main() {
 				cli.StringFlag{
 					Name:  "file, f",
 					Value: "deb.json",
-					Usage: "Path to the deb.json file",
+					Usage: "Path to the deb.json,deb.yml,deb.yaml file",
 				},
 			},
 		},
@@ -93,20 +93,20 @@ func generateContents(c *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("unsupported file format: %s. only .json, .yaml, and .yml are supported.", ext), 1)
 	}
 
-	debJSON := debian.Package{}
+	packageInfo := debian.Package{}
 
-	// load the deb.json file
-	if err := debJSON.Load(file); err != nil {
+	// load the deb.json,deb.yml,deb.yaml file
+	if err := packageInfo.Load(file); err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
-	logger.Println("deb.json loaded")
+	logger.Println(fmt.Sprintf("%s loaded", file))
 
 	// normalize data
-	debJSON.Normalize(pkgDir, version, arch)
+	packageInfo.Normalize(pkgDir, version, arch)
 	logger.Println("pkg data normalized")
 
 	logger.Printf("Generating files in %s", pkgDir)
-	if err := debJSON.GenerateFiles(filepath.Dir(file), pkgDir); err != nil {
+	if err := packageInfo.GenerateFiles(filepath.Dir(file), pkgDir); err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
@@ -129,9 +129,9 @@ func testPkg(c *cli.Context) error {
 		return cli.NewExitError(fmt.Sprintf("unsupported file format: %s. only .json, .yaml, and .yml are supported.", ext), 1)
 	}
 
-	debJSON := debian.Package{}
+	packageInfo := debian.Package{}
 
-	if err := debJSON.Load(file); err != nil {
+	if err := packageInfo.Load(file); err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 
