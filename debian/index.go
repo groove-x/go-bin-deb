@@ -12,9 +12,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/groove-x/go-bin-deb/stringexec"
 	"github.com/mattn/go-zglob"
 	"github.com/mh-cbon/verbose"
+	"gopkg.in/yaml.v2"
+
+	"github.com/groove-x/go-bin-deb/stringexec"
 )
 
 var logger = verbose.Auto()
@@ -58,7 +60,7 @@ type menu struct {
 	MimeType        string `json:"mime-type"`      // ; separated list
 }
 
-// Package contaisn informtation about a debian package to build
+// Package contains information about a debian package to build
 type Package struct {
 	Name                string             `json:"name"`                 // Name of the package
 	Maintainer          string             `json:"maintainer"`           // Information of the package maintainer
@@ -104,21 +106,34 @@ type Package struct {
 	Menus               []menu             `json:"menus"`                // Desktop shortcuts
 }
 
-// Load given deb.json file
+// Load given deb.json or deb.yml file
 func (d *Package) Load(file string) error {
 	if _, err := os.Stat(file); os.IsNotExist(err) {
-		m := fmt.Sprintf("json file '%s' does not exist: %s", file, err.Error())
+		m := fmt.Sprintf("file '%s' does not exist: %s", file, err.Error())
 		return errors.New(m)
 	}
 	byt, err := ioutil.ReadFile(file)
 	if err != nil {
-		m := fmt.Sprintf("error occured while reading file '%s': %s", file, err.Error())
+		m := fmt.Sprintf("error occurred while reading file '%s': %s", file, err.Error())
 		return errors.New(m)
 	}
-	if err := json.Unmarshal(byt, d); err != nil {
-		m := fmt.Sprintf("Invalid json file '%s': %s", file, err.Error())
+
+	switch filepath.Ext(file) {
+	case ".json":
+		if err := json.Unmarshal(byt, d); err != nil {
+			m := fmt.Sprintf("Invalid JSON file '%s': %s", file, err.Error())
+			return errors.New(m)
+		}
+	case ".yml", ".yaml":
+		if err := yaml.Unmarshal(byt, d); err != nil {
+			m := fmt.Sprintf("Invalid YAML file '%s': %s", file, err.Error())
+			return errors.New(m)
+		}
+	default:
+		m := fmt.Sprintf("Unsupported file format '%s'", file)
 		return errors.New(m)
 	}
+
 	return nil
 }
 
