@@ -3,7 +3,7 @@ module github.com/groove-x/go-bin-deb
 go 1.20
 
 require (
-	github.com/mattn/go-zglob v0.0.0-20160607002833-2dbd7f37a45e
+	github.com/mattn/go-zglob v0.0.6
 	github.com/mh-cbon/verbose v0.0.0-20160711150219-2b8e4118ca07
 	github.com/urfave/cli v1.18.0
 	gopkg.in/yaml.v2 v2.4.0
