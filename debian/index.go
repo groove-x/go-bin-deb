@@ -22,8 +22,8 @@ import (
 var logger = verbose.Auto()
 
 type vcsSrc struct {
-	Type string `json:"type"` // Type identifier of the vcs source
-	URL  string `json:"url"`  // Url-like to the vcs source
+	Type string `json:"type" yaml:"type"` // Type identifier of the vcs source
+	URL  string `json:"url" yaml:"url"`   // Url-like to the vcs source
 }
 
 func (c vcsSrc) String() string {
@@ -31,79 +31,80 @@ func (c vcsSrc) String() string {
 }
 
 type filesInstruction struct {
-	From  string `json:"from"`  // Source path to the files
-	Base  string `json:"base"`  // Base path to copy files from
-	To    string `json:"to"`    // Target path to copy the files to
-	Fperm string `json:"fperm"` // Permissions to apply such 0755
-	Dperm string `json:"dperm"` // Permissions to apply such 0755
-}
-type copyright struct {
-	Files     string `json:"files"`     // A pattern to describe a files selection
-	Copyright string `json:"copyright"` // the text of the copyright
-	License   string `json:"license"`   // License to apply to the selected files
-	File      string `json:"file"`      // Path to the file containing the license content
-}
-type menu struct {
-	Name            string `json:"name"`           // Name of the shortcut
-	Description     string `json:"description"`    //
-	GenericName     string `json:"generic-name"`   //
-	Exec            string `json:"exec"`           // Exec command
-	Icon            string `json:"icon"`           // Path to the installed icon
-	Type            string `json:"type"`           // Type of shortcut
-	StartupNotify   bool   `json:"startup-notify"` // yes/no
-	Terminal        bool   `json:"terminal"`       // yes/no
-	DBusActivatable bool   `json:"dbus-activable"` // yes/no
-	NoDisplay       bool   `json:"no-display"`     // yes/no
-	Keywords        string `json:"keywords"`       // ; separated list
-	OnlyShowIn      string `json:"only-show-in"`   // ; separated list
-	Categories      string `json:"categories"`     // ; separated list
-	MimeType        string `json:"mime-type"`      // ; separated list
+	From  string `json:"from" yaml:"from"`   // Source path to the files
+	Base  string `json:"base" yaml:"base"`   // Base path to copy files from
+	To    string `json:"to" yaml:"to"`       // Target path to copy the files to
+	Fperm string `json:"fperm" yaml:"fperm"` // Permissions to apply such 0755
+	Dperm string `json:"dperm" yaml:"dperm"` // Permissions to apply such 0755
 }
 
-// Package contains information about a debian package to build
+type copyright struct {
+	Files     string `json:"files" yaml:"files"`         // A pattern to describe a files selection
+	Copyright string `json:"copyright" yaml:"copyright"` // the text of the copyright
+	License   string `json:"license" yaml:"license"`     // License to apply to the selected files
+	File      string `json:"file" yaml:"file"`           // Path to the file containing the license content
+}
+
+type menu struct {
+	Name            string `json:"name" yaml:"name"`                     // Name of the shortcut
+	Description     string `json:"description" yaml:"description"`       //
+	GenericName     string `json:"generic-name" yaml:"generic-name"`     //
+	Exec            string `json:"exec" yaml:"exec"`                     // Exec command
+	Icon            string `json:"icon" yaml:"icon"`                     // Path to the installed icon
+	Type            string `json:"type" yaml:"type"`                     // Type of shortcut
+	StartupNotify   bool   `json:"startup-notify" yaml:"startup-notify"` // yes/no
+	Terminal        bool   `json:"terminal" yaml:"terminal"`             // yes/no
+	DBusActivatable bool   `json:"dbus-activable" yaml:"dbus-activable"` // yes/no
+	NoDisplay       bool   `json:"no-display" yaml:"no-display"`         // yes/no
+	Keywords        string `json:"keywords" yaml:"keywords"`             // ; separated list
+	OnlyShowIn      string `json:"only-show-in" yaml:"only-show-in"`     // ; separated list
+	Categories      string `json:"categories" yaml:"categories"`         // ; separated list
+	MimeType        string `json:"mime-type" yaml:"mime-type"`           // ; separated list
+}
+
 type Package struct {
-	Name                string             `json:"name"`                 // Name of the package
-	Maintainer          string             `json:"maintainer"`           // Information of the package maintainer
-	Changedby           string             `json:"changed-by"`           // Information of the last package maintainer
-	Section             string             `json:"section"`              // Classification of the application area
-	Priority            string             `json:"priority"`             // Priority of the package (required,important,standard,optional,extra)
-	Arch                string             `json:"arch"`                 // Arch targeted by the package
-	Homepage            string             `json:"homepage"`             // Url to the homepage of the program
-	SourcesURL          string             `json:"sources-url"`          // Url to the source of the program
-	Version             string             `json:"version"`              // Version of the package
-	Vcs                 []vcsSrc           `json:"vcs"`                  // Vcs information of the package
-	Files               []filesInstruction `json:"files"`                // Files information to copy into the package
-	CopyrightSpecURL    string             `json:"copyrights-spec-url"`  // Url to the copyright file specification
-	Copyrights          []copyright        `json:"copyrights"`           // Copyrights of the package
-	Essential           bool               `json:"essential"`            // Indicate if the package is an essential one
-	Depends             []string           `json:"depends"`              // Dependency list
-	Recommends          []string           `json:"recommends"`           // Recommendation list
-	Suggests            []string           `json:"suggests"`             // Suggestion list
-	Enhances            []string           `json:"enhances"`             // Enhancement list
-	PreDepends          []string           `json:"pre-depends"`          // Pre-dependency list
-	Breaks              []string           `json:"breaks"`               // Breaks list
-	Conflicts           []string           `json:"conflicts"`            // Conflicts list
-	Envs                map[string]string  `json:"envs"`                 // Environment variables to define
-	Provides            string             `json:"provides"`             // Provides
-	Replaces            string             `json:"replaces"`             // Replaces
-	BuiltUsing          string             `json:"built-using"`          // Built-using list
-	Description         string             `json:"description"`          // A one-line short description
-	DescriptionExtended string             `json:"description-extended"` // A multi-line long description
-	PackageType         string             `json:"package-type"`         // Type of the package
-	CronFiles           map[string]string  `json:"cron-files"`           // Cron files to use for the package
-	CronCmds            map[string]string  `json:"cron-cmds"`            // Cron string to use to generate cron files for the package
-	SystemdFile         string             `json:"systemd-file"`         // Systemd unit file
-	InitFile            string             `json:"init-file"`            // Init file describing a service for the package
-	DefaultFile         string             `json:"default-file"`         // Default init file describing a service for the package
-	PreinstFile         string             `json:"preinst-file"`         // Pre-inst script path
-	PostinstFile        string             `json:"postinst-file"`        // Post-inst script path
-	PrermFile           string             `json:"prerm-file"`           // Pre-rm script path
-	PostrmFile          string             `json:"postrm-file"`          // Post-rm script path
-	Conffiles           []string           `json:"conf-files"`           // A list of the configuration files
-	Mans                []string           `json:"mans"`                 // A list of man page in the package
-	ChangelogFile       string             `json:"changelog-file"`       // Post-rm to the changelog file to copy to the package
-	ChangelogCmd        string             `json:"changelog-cmd"`        // A cmd to run which generates the content of the changelog file
-	Menus               []menu             `json:"menus"`                // Desktop shortcuts
+	Name                string             `json:"name" yaml:"name"`                                 // Name of the package
+	Maintainer          string             `json:"maintainer" yaml:"maintainer"`                     // Information of the package maintainer
+	Changedby           string             `json:"changed-by" yaml:"changed-by"`                     // Information of the last package maintainer
+	Section             string             `json:"section" yaml:"section"`                           // Classification of the application area
+	Priority            string             `json:"priority" yaml:"priority"`                         // Priority of the package (required,important,standard,optional,extra)
+	Arch                string             `json:"arch" yaml:"arch"`                                 // Arch targeted by the package
+	Homepage            string             `json:"homepage" yaml:"homepage"`                         // Url to the homepage of the program
+	SourcesURL          string             `json:"sources-url" yaml:"sources-url"`                   // Url to the source of the program
+	Version             string             `json:"version" yaml:"version"`                           // Version of the package
+	Vcs                 []vcsSrc           `json:"vcs" yaml:"vcs"`                                   // Vcs information of the package
+	Files               []filesInstruction `json:"files" yaml:"files"`                               // Files information to copy into the package
+	CopyrightSpecURL    string             `json:"copyrights-spec-url" yaml:"copyrights-spec-url"`   // Url to the copyright file specification
+	Copyrights          []copyright        `json:"copyrights" yaml:"copyrights"`                     // Copyrights of the package
+	Essential           bool               `json:"essential" yaml:"essential"`                       // Indicate if the package is an essential one
+	Depends             []string           `json:"depends" yaml:"depends"`                           // Dependency list
+	Recommends          []string           `json:"recommends" yaml:"recommends"`                     // Recommendation list
+	Suggests            []string           `json:"suggests" yaml:"suggests"`                         // Suggestion list
+	Enhances            []string           `json:"enhances" yaml:"enhances"`                         // Enhancement list
+	PreDepends          []string           `json:"pre-depends" yaml:"pre-depends"`                   // Pre-dependency list
+	Breaks              []string           `json:"breaks" yaml:"breaks"`                             // Breaks list
+	Conflicts           []string           `json:"conflicts" yaml:"conflicts"`                       // Conflicts list
+	Envs                map[string]string  `json:"envs" yaml:"envs"`                                 // Environment variables to define
+	Provides            string             `json:"provides" yaml:"provides"`                         // Provides
+	Replaces            string             `json:"replaces" yaml:"replaces"`                         // Replaces
+	BuiltUsing          string             `json:"built-using" yaml:"built-using"`                   // Built-using list
+	Description         string             `json:"description" yaml:"description"`                   // A one-line short description
+	DescriptionExtended string             `json:"description-extended" yaml:"description-extended"` // A multi-line long description
+	PackageType         string             `json:"package-type" yaml:"package-type"`                 // Type of the package
+	CronFiles           map[string]string  `json:"cron-files" yaml:"cron-files"`                     // Cron files to use for the package
+	CronCmds            map[string]string  `json:"cron-cmds" yaml:"cron-cmds"`                       // Cron string to use to generate cron files for the package
+	SystemdFile         string             `json:"systemd-file" yaml:"systemd-file"`                 // Systemd unit file
+	InitFile            string             `json:"init-file" yaml:"init-file"`                       // Init file describing a service for the package
+	DefaultFile         string             `json:"default-file" yaml:"default-file"`                 // Default init file describing a service for the package
+	PreinstFile         string             `json:"preinst-file" yaml:"preinst-file"`                 // Pre-inst script path
+	PostinstFile        string             `json:"postinst-file" yaml:"postinst-file"`               // Post-inst script path
+	PrermFile           string             `json:"prerm-file" yaml:"prerm-file"`                     // Pre-rm script path
+	PostrmFile          string             `json:"postrm-file" yaml:"postrm-file"`                   // Post-rm script path
+	Conffiles           []string           `json:"conf-files" yaml:"conf-files"`                     // A list of the configuration files
+	Mans                []string           `json:"mans" yaml:"mans"`                                 // A list of man page in the package
+	ChangelogFile       string             `json:"changelog-file" yaml:"changelog-file"`             // Post-rm to the changelog file to copy to the package
+	ChangelogCmd        string             `json:"changelog-cmd" yaml:"changelog-cmd"`               // A cmd to run which generates the content of the changelog file
+	Menus               []menu             `json:"menus" yaml:"menus"`                               // Desktop shortcuts
 }
 
 // Load given deb.json or deb.yml file
