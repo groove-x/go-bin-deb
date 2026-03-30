@@ -257,10 +257,18 @@ dpkg-deb --contents hello.deb
 
 ### Release the project
 
+This project uses GitHub Actions for automated releases. To create a new release:
+
 ```sh
-gump patch -d # check
-gump patch # bump
+# Create and push a new tag
+git tag 0.0.19+gx11
+git push origin 0.0.19+gx11
 ```
+
+GitHub Actions will automatically:
+- Build statically-linked binaries for amd64 and arm64 architectures (CGO_ENABLED=0)
+- Generate Debian packages for both architectures
+- Create a GitHub release with the built artifacts
 
 # History
 
