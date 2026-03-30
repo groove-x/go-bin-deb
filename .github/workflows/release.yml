@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  CGO_ENABLED: 0
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test -v ./...
+
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build binaries
+        env:
+          RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
+        run: |
+          GOLDFLAGS="-w -s -X main.VERSION=${RELEASE_VERSION}"
+          
+          # Build for amd64
+          export GOARCH=amd64
+          mkdir -p build/$GOARCH
+          go build -buildvcs=false -ldflags "$GOLDFLAGS" -o build/$GOARCH/go-bin-deb
+          
+          # Build for arm64
+          export GOARCH=arm64
+          mkdir -p build/$GOARCH
+          go build -buildvcs=false -ldflags "$GOLDFLAGS" -o build/$GOARCH/go-bin-deb
+
+      - name: Generate debian packages
+        env:
+          RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
+        run: |
+          # Generate amd64 package
+          build/amd64/go-bin-deb generate --version $RELEASE_VERSION --arch amd64
+          rm -rf pkg-build
+          
+          # Generate arm64 package
+          build/amd64/go-bin-deb generate --version $RELEASE_VERSION --arch arm64
+          rm -rf pkg-build
+          
+          # Rename packages as in release.sh
+          mv go-bin-deb_${RELEASE_VERSION}_amd64.deb go-bin-deb-amd64.deb
+          mv go-bin-deb_${RELEASE_VERSION}_arm64.deb go-bin-deb-arm64.deb
+
+      - name: Upload Assets
+        env:
+          RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload $RELEASE_VERSION go-bin-deb-*.deb --clobber

@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	defer fmt.Println(`
+	defer fmt.Printf(`
 
 You are using a deprecated script. please update your build with latest changes on go-github-release
 
