@@ -66,6 +66,11 @@ jobs:
           mkdir -p build/$GOARCH
           go build -buildvcs=false -ldflags "$GOLDFLAGS" -o build/$GOARCH/go-bin-deb
 
+          # Build for darwin/arm64
+          export GOOS=darwin GOARCH=arm64
+          mkdir -p build/darwin-$GOARCH
+          go build -buildvcs=false -ldflags "$GOLDFLAGS" -o build/darwin-$GOARCH/go-bin-deb
+
       - name: Generate debian packages
         env:
           RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
@@ -87,4 +92,7 @@ jobs:
           RELEASE_VERSION: ${{ steps.get_version.outputs.VERSION }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload $RELEASE_VERSION go-bin-deb-*.deb --clobber
+          mv build/amd64/go-bin-deb go-bin-deb-linux-amd64
+          mv build/arm64/go-bin-deb go-bin-deb-linux-arm64
+          mv build/darwin-arm64/go-bin-deb go-bin-deb-darwin-arm64
+          gh release upload $RELEASE_VERSION go-bin-deb-*.deb go-bin-deb-linux-* go-bin-deb-darwin-* --clobber

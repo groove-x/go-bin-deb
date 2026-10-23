@@ -68,7 +68,15 @@ https://raw.githubusercontent.com/mh-cbon/latest/master/install.sh \
 
 # Requirements
 
+## Linux
+
 A debian system, vagrant, travis, docker, whatever.
+
+## macOS
+
+```
+brew install fakeroot dpkg
+```
 
 # Usage
 
